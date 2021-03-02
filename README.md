@@ -1,5 +1,8 @@
 # Krusty Kookies
 
+## E/R Model
+![](images/Krusty-Kookies.png)
+
 ## Project description
 - **Database modeling:** Your group should create a model for a database for the supervision of production and delivery of cookies produced by the company “Krusty Kookies Sweden AB” (see below).
 
