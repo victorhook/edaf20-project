@@ -43,6 +43,17 @@ public class Database {
 		new Database().connect();
 	}
 
+	/**
+	 * DONE:
+	 * - customers
+	 * - raw_materials
+	 * - cookies
+	 * - recipes
+	 *
+	 * NOT DONE:
+	 * - pallets (get + post)
+	 * - reset
+	 */
 	// TODO: Implement and change output in all methods below!
 
 	public String getCustomers(Request req, Response res) {
