@@ -1,5 +1,13 @@
 # Krusty Kookies
 
+## Todos:
+- [ ] Alla relationer enligt *"Your relations, with primary keys and foreign keys marked correctly, and proper naming."*
+- [ ] Initeringsscript `create-schema.sql` för att skapa tabeller
+- [ ] Initeringsscript `initial-data.sql` för att sätta in data
+- [ ] REST API
+- [ ] Beskrivning för att köra servern.
+
+
 ## E/R Model
 ![](images/Krusty-Kookies.png)
 
