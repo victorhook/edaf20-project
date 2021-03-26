@@ -1,8 +1,13 @@
 package krusty;
 
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.util.JSONPObject;
 import spark.Request;
 import spark.Response;
 
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.sql.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -31,9 +36,12 @@ public class Database {
 
 	private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
 
-
-
 	private Connection connection;
+	private DefaultRecipes recipes;
+
+	public Database() {
+		recipes = new DefaultRecipes();
+	}
 
 	public void connect() {
 		try {
@@ -45,8 +53,8 @@ public class Database {
 		}
 	}
 
-	public static void main(String[] args) {
-		new Database().connect();
+	public static void main(String[] args) throws IOException {
+		new Database();
 	}
 
 	/**
@@ -63,21 +71,23 @@ public class Database {
 	// TODO: Implement and change output in all methods below!
 
 	public String getCustomers(Request req, Response res) {
-		//String result = selectQuery("Customers", "name", "address");
-		//insertQuery("customers", Map.of("name", "hubet", "address", "furutorpsgatan 73"));
-		return "{}";
+		String result = selectQuery("Customers", "customers", "name", "address");
+		return result;
 	}
 
 	public String getRawMaterials(Request req, Response res) {
-		String result = selectQuery("storage", "raw-materials", "ingredientName", "amount", "Unit");
+		String result = selectQuery("storage", "raw-materials", "ingredientName", "amount", "unit");
 		// Need to do some renaming to match API spec.
 		result = result.replace("ingredientName", "name");
-		result = result.toLowerCase(Locale.ROOT);
+		//result = result.toLowerCase(Locale.ROOT);
 		return result;
 	}
 
 	public String getCookies(Request req, Response res) {
-		return selectQuery("recipes", "cookies", "cookieName");
+		String result = selectQuery("recipes", "cookies", "cookieName");
+		// Need to match API
+		result = result.replace("cookieName", "name");
+		return result;
 	}
 
 	public String getRecipes(Request req, Response res) {
@@ -184,6 +194,23 @@ public class Database {
 		}
 	}
 
+	private void updateStorage(String name, int amount) throws SQLException {
+		String query = "UPDATE storage SET ? = ? WHERE ";
+		PreparedStatement stmt = this.connection.prepareStatement(query);
+		stmt.setString(1, name);
+		stmt.setInt(2, amount);
+		stmt.executeUpdate();
+	}
+
+	private Recipe getRecipe(String recipe) {
+		for (Recipe rec: recipes.recipes) {
+			if (rec.name.equals(recipe)) {
+				return rec;
+			}
+		}
+		return null;
+	}
+
 	/** POST /pallets?cookie=Amneris */
 	public String createPallet(Request req, Response res) throws SQLException {
 	 	String cookieName = req.queryParams("cookie");
@@ -202,10 +229,35 @@ public class Database {
 			}
 		}
 
+	 	// Update storage information!
+		this.connection.setAutoCommit(false);
+
+	 	// Check if we can create a new pallet!
+		var ingredients= getRecipe(cookieName).ingredients;
+		String query =  "UPDATE storage\n" +
+						"SET amount = amount - 100\n" +
+						"WHERE ingredientName IN\n" +
+						"(\n" +
+						"SELECT ingredientName\n" +
+						"FROM ingredientinrecipes\n" +
+						"WHERE cookieName = ?\n" +
+						");";
+
+		PreparedStatement stmt= this.connection.prepareStatement(query);
+		stmt.setString(1, cookieName);
+		int rowsChanged = stmt.executeUpdate();
+
+		// If all rows changed, we know that we can create the pallet!
+		if (rowsChanged == ingredients.length) {
+			this.connection.commit();
+		} else {
+			resultStatus = ERROR;
+		}
+
 	 	if (resultStatus != ERROR && resultStatus != UNKNOWN_COOKIE) {
 
-			String[] columns = new String[]{"product_id", "creationDate" , "isBlocked" , "location"};
-			PreparedStatement stmt = makePreparedStatement("pallets", columns);
+			String[] columns = new String[] {"product_id", "creationDate" , "isBlocked" , "location"};
+			stmt = makePreparedStatement("pallets", columns);
 
 			if (stmt == null) {
 				resultStatus = ERROR;
@@ -221,6 +273,8 @@ public class Database {
 		}
 
 	 	if (resultStatus == PALLET_OK) {
+	 		// Need to update Pallet 36 x 10 x 15 =
+
 	 		return  "{\n\t\"status\": \"ok\" " +
 					"\n\t\"id\": " + palletId + "\n}";
 		} else if (resultStatus == ERROR) {
@@ -228,6 +282,7 @@ public class Database {
 		} else {
 			return "{\n\t\"status\": \"unknown cookie\"\n}";
 		}
+
 	}
 
 	private int getProductIdFromCookie(String name) {
