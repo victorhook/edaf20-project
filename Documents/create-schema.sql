@@ -40,6 +40,7 @@ FOREIGN KEY(ingredientName) REFERENCES Storage(ingredientName)
 CREATE TABLE Storage (
 ingredientName VARCHAR(20),
 amount INT,
+unit VARCHAR(3),
 PRIMARY KEY(ingredientName)
 );
 
