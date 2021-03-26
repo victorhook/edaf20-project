@@ -5,7 +5,7 @@ import java.util.List;
 
 public class DefaultRecipes {
 
-    List<Recipe> recipes;
+    public List<Recipe> recipes;
 
     public DefaultRecipes() {
         this.recipes = Arrays.asList(
