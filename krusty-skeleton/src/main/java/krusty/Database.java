@@ -5,14 +5,13 @@ import com.fasterxml.jackson.databind.util.JSONPObject;
 import spark.Request;
 import spark.Response;
 
-<<<<<<< Updated upstream
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-=======
+
 import java.io.File;
 import java.io.FileNotFoundException;
->>>>>>> Stashed changes
+
 import java.sql.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
