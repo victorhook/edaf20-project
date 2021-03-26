@@ -5,9 +5,14 @@ import com.fasterxml.jackson.databind.util.JSONPObject;
 import spark.Request;
 import spark.Response;
 
+<<<<<<< Updated upstream
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+=======
+import java.io.File;
+import java.io.FileNotFoundException;
+>>>>>>> Stashed changes
 import java.sql.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -387,6 +392,78 @@ public class Database {
 		}
 
 		return jsonResult;
+	}
+
+	private void initCustomers(){
+		StringBuilder query = new StringBuilder();
+		try {
+			File myObj = new File("C:\\Users\\Hjalle\\Documents\\customers.txt");
+			Scanner myReader = new Scanner(myObj);
+			while (myReader.hasNextLine()) {
+				String data = myReader.nextLine();
+				query.append(data);
+			}
+			myReader.close();
+			PreparedStatement stmt = this.connection.prepareStatement(query.toString());
+			stmt.executeUpdate();
+		} catch (FileNotFoundException | SQLException e) {
+			System.out.println("An error occurred.");
+			e.printStackTrace();
+		}
+	}
+
+	private void initIngredientInRecipes(){
+		StringBuilder query = new StringBuilder();
+		try {
+			File myObj = new File("C:\\Users\\Hjalle\\Documents\\ingredients.txt");
+			Scanner myReader = new Scanner(myObj);
+			while (myReader.hasNextLine()) {
+				String data = myReader.nextLine();
+				query.append(data);
+			}
+			myReader.close();
+			PreparedStatement stmt = this.connection.prepareStatement(query.toString());
+			stmt.executeUpdate();
+		} catch (FileNotFoundException | SQLException e) {
+			System.out.println("An error occurred.");
+			e.printStackTrace();
+		}
+	}
+
+	private void initRecipes(){
+		StringBuilder query = new StringBuilder();
+		try {
+			File myObj = new File("C:\\Users\\Hjalle\\Documents\\recipes.txt");
+			Scanner myReader = new Scanner(myObj);
+			while (myReader.hasNextLine()) {
+				String data = myReader.nextLine();
+				query.append(data);
+			}
+			myReader.close();
+			PreparedStatement stmt = this.connection.prepareStatement(query.toString());
+			stmt.executeUpdate();
+		} catch (FileNotFoundException | SQLException e) {
+			System.out.println("An error occurred.");
+			e.printStackTrace();
+		}
+	}
+
+	private void initStorage(){
+		StringBuilder query = new StringBuilder();
+		try {
+			File myObj = new File("C:\\Users\\Hjalle\\Documents\\storage.txt");
+			Scanner myReader = new Scanner(myObj);
+			while (myReader.hasNextLine()) {
+				String data = myReader.nextLine();
+				query.append(data);
+			}
+			myReader.close();
+			PreparedStatement stmt = this.connection.prepareStatement(query.toString());
+			stmt.executeUpdate();
+		} catch (FileNotFoundException | SQLException e) {
+			System.out.println("An error occurred.");
+			e.printStackTrace();
+		}
 	}
 
 }
