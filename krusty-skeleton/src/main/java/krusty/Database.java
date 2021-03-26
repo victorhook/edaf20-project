@@ -25,7 +25,7 @@ public class Database {
 	private static final String jdbcHost = "jdbc:mysql://" + hostIp + ":" + hostPort + "/" + database;
 
 	private static final String DEFAULT_PALLET_LOCATION = "transit";
-	private static final int INVALID_COOKIE_NAME = -1;
+	private static final int INVALID_COOKIE_NAME = -1, BAD_RESULT = -1, ERROR = -1, UNKNOWN_COOKIE = -2, PALLET_OK = 1;
 
 	private Connection connection;
 
@@ -90,38 +90,65 @@ public class Database {
 		return "{}";
 	}
 
+	private int getLastPalletId() throws SQLException {
+		ResultSet result = this.connection.createStatement().executeQuery(
+				"SELECT pallet_id " +
+					"FROM pallets " +
+					"ORDER BY pallet_id DESC LIMIT 1;"
+
+		);
+
+		if (result.next()) {
+			return result.getInt(1);
+		} else {
+			return BAD_RESULT;
+		}
+	}
+
 	/** POST /pallets?cookie=Amneris */
 	public String createPallet(Request req, Response res) throws SQLException {
-	 	String result;
 	 	String cookieName = req.queryParams("cookie");
+		int cookieId = -1;
+		int palletId = -1;
+		int resultStatus = PALLET_OK;
 
 	 	if (cookieName == null) {
-	 		// TODO: Handle this
+			resultStatus = ERROR;
 		}
 
-		int cookieId = getProductIdFromCookie(cookieName);
-		if (cookieId == INVALID_COOKIE_NAME) {
-			result = "{status: unknown cookie}";
-		}
-
-		String[] columns = new String[]{"product_id", "creationDate" , "isBlocked" , "location"};
-		PreparedStatement stmt = makePreparedStatement("pallet", columns);
-
-	 	if (stmt == null) {
-			// TODO: HANDLE ERROR?
-		} else {
-	 		stmt.setInt(0, cookieId);
-			stmt.setDate(1, getTodaysDate());
-			stmt.setBoolean(2, false);
-			stmt.setString(3, DEFAULT_PALLET_LOCATION);
-			ResultSet resultSet = stmt.executeQuery();
-			if (resultSet.next()) {
-				System.out.println(resultSet);
-				//result = String.format("{status: ok, id: %d}", palletId);
+	 	if (resultStatus != ERROR) {
+			cookieId = getProductIdFromCookie(cookieName);
+			if (cookieId == INVALID_COOKIE_NAME) {
+				resultStatus = UNKNOWN_COOKIE;
 			}
 		}
 
-		return "{}";
+	 	if (resultStatus != ERROR && resultStatus != UNKNOWN_COOKIE) {
+
+			String[] columns = new String[]{"product_id", "creationDate" , "isBlocked" , "location"};
+			PreparedStatement stmt = makePreparedStatement("pallets", columns);
+
+			if (stmt == null) {
+				resultStatus = ERROR;
+			} else {
+				stmt.setInt(1, cookieId);
+				stmt.setDate(2, getTodaysDate());
+				stmt.setBoolean(3, false);
+				stmt.setString(4, DEFAULT_PALLET_LOCATION);
+
+				resultStatus = stmt.executeUpdate();
+				palletId = getLastPalletId();
+			}
+		}
+
+	 	if (resultStatus == PALLET_OK) {
+	 		return  "{\n\t\"status\": \"ok\" " +
+					"\n\t\"id\": " + palletId + "\n}";
+		} else if (resultStatus == ERROR) {
+			return "{\n\t\"status\": \"error\"\n}";
+		} else {
+			return "{\n\t\"status\": \"unknown cookie\"\n}";
+		}
 	}
 
 	private int getProductIdFromCookie(String name) {
@@ -130,7 +157,7 @@ public class Database {
 		try {
 			String query = "SELECT product_id FROM products WHERE cookieName = ?;";
 			var stmt = connection.prepareStatement(query);
-			stmt.setString(0, name);
+			stmt.setString(1, name);
 			ResultSet result = stmt.executeQuery();
 			if (result.next()) {
 				id = result.getInt("product_id");
@@ -152,7 +179,6 @@ public class Database {
 		PreparedStatement stmt = null;
 		try {
 			StringBuilder query = new StringBuilder("INSERT INTO ");
-			query.append(table);
 
 			StringJoiner keys = new StringJoiner(", ");
 			StringJoiner values = new StringJoiner(", ");
