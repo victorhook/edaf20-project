@@ -160,7 +160,37 @@ public class Database {
 	}
 
 	public String reset(Request req, Response res) {
-		return "{}";
+		String[] resetTables = {"Customers", "IngredientsInRecipes", "Recipes", "Storage", "Pallets"};
+		for(String table : resetTables){
+			try (Statement stmt = connection.createStatement()){
+				String sql = "TRUNCATE TABLE " + table;
+    /*            statement.executeUpdate(sql, Statement.RETURN_GENERATED_KEYS);
+    //            ResultSet rs = statement.getGeneratedKeys();
+                if (rs.next()) {
+                    int createdId = rs.getInt(1);
+                }
+    */
+				ResultSet resultSet = statement.executeQuery(sql);
+				//            if(!"Pallets".equals(table)){
+				//                        return table //init-data
+				//            }
+				if("Customers".equals(table)){
+					initCustomers();
+				}
+				if("IngredientInRecipes".equals(table)){
+					initIngredientInRecipes();
+				}
+				if("Recipes".equals(table)){
+					initRecipes();
+				}
+				if("Storage".equals(table)){
+					initStorage();
+				}
+
+			}
+		}catch (SQLException e) {
+			e.printStackTrace();
+		}return "{"status": "ok"}";
 	}
 
 	/** Helper method to convert raw string date to SQL string date object. */
