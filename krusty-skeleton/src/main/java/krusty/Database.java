@@ -4,6 +4,8 @@ import spark.Request;
 import spark.Response;
 
 import java.sql.*;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.Date;
 
@@ -26,6 +28,10 @@ public class Database {
 
 	private static final String DEFAULT_PALLET_LOCATION = "transit";
 	private static final int INVALID_COOKIE_NAME = -1, BAD_RESULT = -1, ERROR = -1, UNKNOWN_COOKIE = -2, PALLET_OK = 1;
+
+	private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
+
+
 
 	private Connection connection;
 
@@ -51,7 +57,7 @@ public class Database {
 	 * - recipes
 	 *
 	 * NOT DONE:
-	 * - pallets (get + post)
+	 * - pallets (get )
 	 * - reset
 	 */
 	// TODO: Implement and change output in all methods below!
@@ -82,12 +88,85 @@ public class Database {
 		return result;
 	}
 
-	public String getPallets(Request req, Response res) {
-		return "{\"pallets\":[]}";
+	public String getPallets(Request req, Response res) throws SQLException, ParseException {
+		// Build base query, joining all tables that we will need.
+		StringBuilder query = new StringBuilder(
+				"SELECT pallet_id, cookieName, creationDate, name, isBlocked\n" +
+				"FROM pallets\n" +
+				"JOIN products USING (product_id)\n" +
+				"JOIN orders USING (order_id)\n" +
+				"JOIN customers USING (customer_id)\n"
+		);
+
+		// This joiner is used to bind together query conditions.
+		StringJoiner condition = new StringJoiner(" AND ");
+
+		Map<String, String> conditions = new HashMap<>();
+		var params = Map.of(
+				"id", "pallet_id = ?",
+				"cookie", "cookieName = ?",
+				"from", "creationDate > ?",
+				"to", "creationDate < ?",
+				"customer", "name = ?",
+				"blocked", "blocked = ?"
+		);
+
+		// Check all the parameters and if they exists in the params, add them to tha condition list.
+		for (var entry: params.entrySet()) {
+			String param = req.queryParams(entry.getKey());
+			if (param != null) {
+				conditions.put(entry.getValue(), param);
+			}
+		}
+
+		// If we have any query conditions, we add WHERE; otherwise not.
+		if (params.size() > 0)
+			query.append("WHERE ");
+
+		// Add all condition strings to the query.
+		for (var cond: conditions.keySet()) {
+			condition.add(cond);
+		}
+
+		// Add the conditions to the query string.
+		query.append(condition.toString() + ";");
+
+		// Create statement
+	 	PreparedStatement stmt = this.connection.prepareStatement(query.toString());
+
+		// Set all the variables for the statement.
+		int index = 1;
+		for (var entry: conditions.entrySet()) {
+			// For every condition given, set the value for the prepared statement.
+			// Some of this is hardcoded due to specific types.
+			String queryPart = entry.getKey();
+			String value = entry.getValue();
+
+			if (queryPart.contains("id")) {
+				stmt.setInt(index, Integer.parseInt(value));
+			} else if (queryPart.contains("Date")) {
+				stmt.setDate(index, toSqlDate(value));
+			} else if (queryPart.contains("blocked")) {
+				stmt.setBoolean(index, Boolean.parseBoolean(value));
+			} else {
+				stmt.setString(index, value);
+			}
+			index++;
+		}
+
+		System.out.println(stmt + "\n");
+		String result = Jsonizer.toJson(stmt.executeQuery(), "pallets");
+		return result;
 	}
 
 	public String reset(Request req, Response res) {
 		return "{}";
+	}
+
+	/** Helper method to convert raw string date to SQL string date object. */
+	private java.sql.Date toSqlDate(String date) throws ParseException {
+		Date parsed = DATE_FORMAT.parse(date);
+		return new java.sql.Date(parsed.getTime());
 	}
 
 	private int getLastPalletId() throws SQLException {
