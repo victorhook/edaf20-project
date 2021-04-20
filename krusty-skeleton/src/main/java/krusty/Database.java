@@ -390,75 +390,61 @@ public class Database {
 	}
 
 	private void initCustomers(){
-		StringBuilder query = new StringBuilder();
+		String data = readFile("customers.txt");
+		Statement stmt = null;
 		try {
-			File myObj = new File("src/main/resources/customers.txt");
-			Scanner myReader = new Scanner(myObj);
-			while (myReader.hasNextLine()) {
-				String data = myReader.nextLine();
-				query.append(data);
-			}
-			myReader.close();
-			PreparedStatement stmt = this.connection.prepareStatement(query.toString());
-			stmt.executeUpdate();
-		} catch (FileNotFoundException | SQLException e) {
+			stmt = this.connection.createStatement();
+			stmt.execute(data);
+		} catch (SQLException e) {
 			System.out.println("An error occurred.");
 			e.printStackTrace();
 		}
 	}
 
 	private void initIngredientInRecipes(){
-		StringBuilder query = new StringBuilder();
+		String data = readFile("ingredients.txt");
+		Statement stmt = null;
 		try {
-			File myObj = new File("src/main/resources/ingredients.txt");
-			Scanner myReader = new Scanner(myObj);
-			while (myReader.hasNextLine()) {
-				String data = myReader.nextLine();
-				query.append(data);
-			}
-			myReader.close();
-			PreparedStatement stmt = this.connection.prepareStatement(query.toString());
-			stmt.executeUpdate();
-		} catch (FileNotFoundException | SQLException e) {
+			stmt = this.connection.createStatement();
+			stmt.execute(data);
+		} catch (SQLException e) {
 			System.out.println("An error occurred.");
 			e.printStackTrace();
 		}
 	}
 
 	private void initRecipes(){
-		StringBuilder query = new StringBuilder();
+		String data = readFile("recipes.txt");
+		Statement stmt = null;
 		try {
-			File myObj = new File("src/main/resources/recipes.txt");
-			Scanner myReader = new Scanner(myObj);
-			while (myReader.hasNextLine()) {
-				String data = myReader.nextLine();
-				query.append(data);
-			}
-			myReader.close();
-			PreparedStatement stmt = this.connection.prepareStatement(query.toString());
-			stmt.executeUpdate();
-		} catch (FileNotFoundException | SQLException e) {
+			stmt = this.connection.createStatement();
+			stmt.execute(data);
+		} catch (SQLException e) {
 			System.out.println("An error occurred.");
 			e.printStackTrace();
 		}
 	}
 
 	private void initStorage(){
-		StringBuilder query = new StringBuilder();
+		String data = readFile("storage.txt");
+		Statement stmt = null;
 		try {
-			File myObj = new File("src/main/resources/storage.txt");
-			Scanner myReader = new Scanner(myObj);
-			while (myReader.hasNextLine()) {
-				String data = myReader.nextLine();
-				query.append(data);
-			}
-			myReader.close();
-			PreparedStatement stmt = this.connection.prepareStatement(query.toString());
-			stmt.executeUpdate();
-		} catch (FileNotFoundException | SQLException e) {
+			stmt = this.connection.createStatement();
+			stmt.execute(data);
+		} catch (SQLException e) {
 			System.out.println("An error occurred.");
 			e.printStackTrace();
 		}
+	}
+
+	private String readFile(String file) {
+		try {
+			String path = "src/main/resources/" + file;
+			return new String(Files.readAllBytes(Paths.get(path)));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return "";
 	}
 
 }
