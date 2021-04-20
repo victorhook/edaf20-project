@@ -21,16 +21,16 @@ import java.util.Date;
 import static krusty.Jsonizer.toJson;
 
 public class Database {
-	/**
-	 * Modify it to fit your environment and then use this string when connecting to your database!
-	 */
-	// For use with MySQL or PostgreSQL
+
+	// MySQL db credentials
 	private static final String dbUsername = "krustyadmin";
 	private static final String dbPassword = "krustykaka123";
 	private static final String database = "krustykookie";
 
 	private static final String hostPort = "13337";
 	private static final String hostIp = "83.250.66.137";
+
+	// Need to add timezone info for connection.
 	private static final String jdbcHost = "jdbc:mysql://" + hostIp + ":" + hostPort + "/" + database + "?serverTimezone=Europe/Stockholm";
 
 	private static final String DEFAULT_PALLET_LOCATION = "transit";
@@ -169,36 +169,43 @@ public class Database {
 		return result;
 	}
 
+	private void setForeignKeyCheck(boolean on) throws SQLException {
+		connection.createStatement().executeQuery(
+				"SET FOREIGN_KEY_CHECKS = " + (on ? "1" : "0") + ";"
+		);
+	}
+
 	public String reset(Request req, Response res) throws SQLException {
-		String[] resetTables = {"Customers", "IngredientsInRecipes", "Recipes", "Storage", "Pallets"};
+		String[] resetTables = {"Customers", "IngredientInRecipes", "Recipes", "Storage", "Pallets"};
 		for(String table : resetTables){
 			try (Statement stmt = connection.createStatement()){
-				String sql = "TRUNCATE TABLE " + table;
-                stmt.executeUpdate(sql, Statement.RETURN_GENERATED_KEYS);
-                ResultSet rs = stmt.getGeneratedKeys();
-                if (rs.next()) {
-                    int createdId = rs.getInt(1);
-                }
 
-				ResultSet resultSet = stmt.executeQuery(sql);
-				//            if(!"Pallets".equals(table)){
-				//                        return table //init-data
-				//            }
-				if("Customers".equals(table)){
+				// Truncate the table
+				setForeignKeyCheck(false);
+				String sql = "TRUNCATE TABLE " + table;
+				int result = stmt.executeUpdate(sql, Statement.RETURN_GENERATED_KEYS);
+				setForeignKeyCheck(true);
+
+
+				/*
+				if ("Customers".equals(table)){
 					initCustomers();
 				}
-				if("IngredientInRecipes".equals(table)){
+				else if ("IngredientInRecipes".equals(table)){
 					initIngredientInRecipes();
 				}
-				if("Recipes".equals(table)){
+				else if ("Recipes".equals(table)){
 					initRecipes();
 				}
-				if("Storage".equals(table)){
+				else if ("Storage".equals(table)){
 					initStorage();
 				}
 
+				 */
+
 			}
-		}return "status" + ": " + "ok";
+		}
+		return "status" + ": " + "ok";
 	}
 
 	/** Helper method to convert raw string date to SQL string date object. */
