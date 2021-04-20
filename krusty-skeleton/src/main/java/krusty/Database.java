@@ -164,6 +164,9 @@ public class Database {
 		}
 
 		String result = Jsonizer.toJson(stmt.executeQuery(), "pallets");
+		result = result.replace("false", "\"no\"")
+			      	   .replace("true", "\"yes\"")
+			  		   .replace("null", "\"null\"");
 		return result;
 	}
 
@@ -279,7 +282,10 @@ public class Database {
 		boolean changeOk = true;
 		for (Ingredient ingredient: ingredients) {
 			PreparedStatement stmt = this.connection.prepareStatement(query);
-			stmt.setInt(1, ingredient.amount);
+
+			int palletAmount = 54 * ingredient.amount;
+
+			stmt.setInt(1, palletAmount);
 			stmt.setString(2, ingredient.name);
 			stmt.setString(3, cookieName);
 
@@ -317,7 +323,6 @@ public class Database {
 		}
 
 		setSafeUpdate(true);
-
 
 	 	if (resultStatus == PALLET_OK) {
 	 		// Need to update Pallet 36 x 10 x 15 =
