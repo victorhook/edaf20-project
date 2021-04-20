@@ -105,8 +105,8 @@ public class Database {
 		StringBuilder query = new StringBuilder(
 				"SELECT pallet_id, cookieName, creationDate, name, isBlocked\n" +
 				"FROM pallets\n" +
-				"JOIN orders USING (order_id)\n" +
-				"JOIN customers USING (customer_id)\n"
+				"LEFT JOIN orders USING (order_id)\n" +
+				"LEFT JOIN customers USING (customer_id)\n"
 		);
 
 		// This joiner is used to bind together query conditions.
@@ -163,7 +163,6 @@ public class Database {
 			index++;
 		}
 
-		System.out.println(stmt + "\n");
 		String result = Jsonizer.toJson(stmt.executeQuery(), "pallets");
 		return result;
 	}
@@ -250,7 +249,6 @@ public class Database {
 	/** POST /pallets?cookie=Amneris */
 	public String createPallet(Request req, Response res) throws SQLException {
 	 	String cookieName = req.queryParams("cookie");
-		int cookieId = -1;
 		int palletId = -1;
 		int resultStatus = PALLET_OK;
 
@@ -266,7 +264,7 @@ public class Database {
 
 	 	// Check if we can create a new pallet!
 		var ingredients= getRecipe(cookieName).ingredients;
-		System.out.println(ingredients);
+
 		String query =  "UPDATE storage\n" +
 						"SET amount = amount - ?\n" +
 						"WHERE ingredientName = ? AND " +
@@ -284,10 +282,10 @@ public class Database {
 			stmt.setInt(1, ingredient.amount);
 			stmt.setString(2, ingredient.name);
 			stmt.setString(3, cookieName);
-			System.out.println(stmt);
+
 			int result = stmt.executeUpdate();
 			changeOk = result > 0;
-			System.out.println(result);
+
 			if (!changeOk)
 				break;
 		}
