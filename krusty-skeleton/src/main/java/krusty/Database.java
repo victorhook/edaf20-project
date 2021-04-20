@@ -164,6 +164,9 @@ public class Database {
 		}
 
 		String result = Jsonizer.toJson(stmt.executeQuery(), "pallets");
+		result = result.replace("false", "\"no\"")
+			      	   .replace("true", "\"yes\"")
+			  		   .replace("null", "\"null\"");
 		return result;
 	}
 
@@ -286,8 +289,6 @@ public class Database {
 			stmt.setString(2, ingredient.name);
 			stmt.setString(3, cookieName);
 
-			System.out.printf("%s: %s\n", ingredient.name, palletAmount);
-
 			int result = stmt.executeUpdate();
 			changeOk = result > 0;
 
@@ -322,7 +323,6 @@ public class Database {
 		}
 
 		setSafeUpdate(true);
-
 
 	 	if (resultStatus == PALLET_OK) {
 	 		// Need to update Pallet 36 x 10 x 15 =
