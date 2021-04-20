@@ -15,6 +15,8 @@ import java.io.FileNotFoundException;
 import java.sql.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.Date;
 
@@ -37,6 +39,8 @@ public class Database {
 	private static final int INVALID_COOKIE_NAME = -1, BAD_RESULT = -1, ERROR = -1, UNKNOWN_COOKIE = -2, PALLET_OK = 1;
 
 	private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
+	private static final DateTimeFormatter DATE_TIME_FORMAT = DateTimeFormatter.ofPattern("YYYY-MM-dd HH:mm:ss");
+
 
 	private Connection connection;
 	private DefaultRecipes recipes;
@@ -55,9 +59,6 @@ public class Database {
 		}
 	}
 
-	public static void main(String[] args) throws IOException {
-		new Database();
-	}
 
 	/**
 	 * DONE:
@@ -323,7 +324,7 @@ public class Database {
 				resultStatus = ERROR;
 			} else {
 				stmt.setString(1, cookieName);
-				stmt.setDate(2, getTodaysDate());
+				stmt.setString(2, getCurrentDateTime());
 				stmt.setBoolean(3, false);
 				stmt.setString(4, DEFAULT_PALLET_LOCATION);
 
@@ -347,22 +348,8 @@ public class Database {
 
 	}
 
-	private int getProductIdFromCookie(String name) {
-		int id = INVALID_COOKIE_NAME;
-
-		try {
-			String query = "SELECT product_id FROM products WHERE cookieName = ?;";
-			var stmt = connection.prepareStatement(query);
-			stmt.setString(1, name);
-			ResultSet result = stmt.executeQuery();
-			if (result.next()) {
-				id = result.getInt("product_id");
-			}
-		} catch (SQLException e) {
-			System.out.println("ERROR Getting product id from cookie!");
-		}
-
-		return id;
+	private String getCurrentDateTime() {
+		return DATE_TIME_FORMAT.format(LocalDateTime.now());
 	}
 
 	/** Helper method to check if a cookie exists */
