@@ -399,7 +399,7 @@ public class Database {
 	private void initCustomers(){
 		StringBuilder query = new StringBuilder();
 		try {
-			File myObj = new File("C:\\Users\\Hjalle\\Documents\\customers.txt");
+			File myObj = new File("src/main/resources/customers.txt");
 			Scanner myReader = new Scanner(myObj);
 			while (myReader.hasNextLine()) {
 				String data = myReader.nextLine();
@@ -417,7 +417,7 @@ public class Database {
 	private void initIngredientInRecipes(){
 		StringBuilder query = new StringBuilder();
 		try {
-			File myObj = new File("C:\\Users\\Hjalle\\Documents\\ingredients.txt");
+			File myObj = new File("src/main/resources/ingredients.txt");
 			Scanner myReader = new Scanner(myObj);
 			while (myReader.hasNextLine()) {
 				String data = myReader.nextLine();
@@ -435,7 +435,7 @@ public class Database {
 	private void initRecipes(){
 		StringBuilder query = new StringBuilder();
 		try {
-			File myObj = new File("C:\\Users\\Hjalle\\Documents\\recipes.txt");
+			File myObj = new File("src/main/resources/recipes.txt");
 			Scanner myReader = new Scanner(myObj);
 			while (myReader.hasNextLine()) {
 				String data = myReader.nextLine();
@@ -453,7 +453,7 @@ public class Database {
 	private void initStorage(){
 		StringBuilder query = new StringBuilder();
 		try {
-			File myObj = new File("C:\\Users\\Hjalle\\Documents\\storage.txt");
+			File myObj = new File("src/main/resources/storage.txt");
 			Scanner myReader = new Scanner(myObj);
 			while (myReader.hasNextLine()) {
 				String data = myReader.nextLine();

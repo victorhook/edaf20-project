@@ -126,7 +126,7 @@ public class KrustyTests {
 	 */
 	protected String readFile(String file) {
 		try {
-			String path = "src/test/resources/" + file;
+			String path = "src/main/resources/" + file;
 			return new String(Files.readAllBytes(Paths.get(path)));
 		} catch (IOException e) {
 			e.printStackTrace();
