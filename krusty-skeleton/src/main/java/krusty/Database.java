@@ -36,7 +36,7 @@ public class Database {
 	private static final String DEFAULT_PALLET_LOCATION = "transit";
 	private static final int INVALID_COOKIE_NAME = -1, BAD_RESULT = -1, ERROR = -1, UNKNOWN_COOKIE = -2, PALLET_OK = 1;
 
-	private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
+	private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd %H:%m:%s");
 
 	private Connection connection;
 	private DefaultRecipes recipes;
@@ -115,8 +115,8 @@ public class Database {
 		Map<String, String> conditions = new HashMap<>();
 		var params = Map.of(
 				"cookie", "cookieName = ?",
-				"from", "creationDate > ?",
-				"to", "creationDate < ?",
+				"from", "creationDate >= ?",
+				"to", "creationDate <= ?",
 				"blocked", "blocked = ?"
 		);
 
@@ -163,10 +163,20 @@ public class Database {
 			index++;
 		}
 
+		System.out.println(stmt);
+
 		String result = Jsonizer.toJson(stmt.executeQuery(), "pallets");
 		result = result.replace("false", "\"no\"")
 			      	   .replace("true", "\"yes\"")
-			  		   .replace("null", "\"null\"");
+			  		   .replace("null", "\"null\"")
+					   .replace("pallet_id", "id")
+					   .replace("cookieName", "cookie")
+					   .replace("isBlocked", "blocked")
+					   .replace("creationDate", "production_date");
+
+
+		System.out.println(result);
+
 		return result;
 	}
 
@@ -421,52 +431,24 @@ public class Database {
 		return jsonResult;
 	}
 
-	private void initCustomers(){
+	private void initCustomers() throws SQLException {
 		String data = readFile("customers.sql");
-		Statement stmt = null;
-		try {
-			stmt = this.connection.createStatement();
-			stmt.execute(data);
-		} catch (SQLException e) {
-			System.out.println("An error occurred.");
-			e.printStackTrace();
-		}
+		this.connection.createStatement().execute(data);
 	}
 
-	private void initIngredientInRecipes(){
+	private void initIngredientInRecipes() throws SQLException {
 		String data = readFile("ingredients.sql");
-		Statement stmt = null;
-		try {
-			stmt = this.connection.createStatement();
-			stmt.execute(data);
-		} catch (SQLException e) {
-			System.out.println("An error occurred.");
-			e.printStackTrace();
-		}
+		this.connection.createStatement().execute(data);
 	}
 
-	private void initRecipes(){
+	private void initRecipes() throws SQLException {
 		String data = readFile("recipes.sql");
-		Statement stmt = null;
-		try {
-			stmt = this.connection.createStatement();
-			stmt.execute(data);
-		} catch (SQLException e) {
-			System.out.println("An error occurred.");
-			e.printStackTrace();
-		}
+		this.connection.createStatement().execute(data);
 	}
 
-	private void initStorage(){
+	private void initStorage() throws SQLException {
 		String data = readFile("storage.sql");
-		Statement stmt = null;
-		try {
-			stmt = this.connection.createStatement();
-			stmt.execute(data);
-		} catch (SQLException e) {
-			System.out.println("An error occurred.");
-			e.printStackTrace();
-		}
+		this.connection.createStatement().execute(data);
 	}
 
 	private String readFile(String file) {
