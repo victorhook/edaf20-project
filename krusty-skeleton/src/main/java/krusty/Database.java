@@ -24,8 +24,6 @@ public class Database {
 	/**
 	 * Modify it to fit your environment and then use this string when connecting to your database!
 	 */
-	private static final String jdbcString = "jdbc:mysql://localhost/krusty";
-
 	// For use with MySQL or PostgreSQL
 	private static final String dbUsername = "krustyadmin";
 	private static final String dbPassword = "krustykaka123";
@@ -33,7 +31,7 @@ public class Database {
 
 	private static final String hostPort = "13337";
 	private static final String hostIp = "83.250.66.137";
-	private static final String jdbcHost = "jdbc:mysql://" + hostIp + ":" + hostPort + "/" + database;
+	private static final String jdbcHost = "jdbc:mysql://" + hostIp + ":" + hostPort + "/" + database + "?serverTimezone=Europe/Stockholm";
 
 	private static final String DEFAULT_PALLET_LOCATION = "transit";
 	private static final int INVALID_COOKIE_NAME = -1, BAD_RESULT = -1, ERROR = -1, UNKNOWN_COOKIE = -2, PALLET_OK = 1;
@@ -52,8 +50,8 @@ public class Database {
 			connection = DriverManager.getConnection(jdbcHost, dbUsername, dbPassword);
 			System.out.println("Connected to database");
 		} catch (SQLException e) {
-			System.out.println("ERROR: Failed to connect do database!");
-			System.out.println(e);
+			e.printStackTrace();
+			System.out.println("ERROR: Failed to connect to database!");
 		}
 	}
 
@@ -113,15 +111,13 @@ public class Database {
 		);
 
 		// This joiner is used to bind together query conditions.
-		StringJoiner condition = new StringJoiner(" AND ");
+		StringJoiner conditionJoiner = new StringJoiner(" AND ");
 
 		Map<String, String> conditions = new HashMap<>();
 		var params = Map.of(
-				"id", "pallet_id = ?",
 				"cookie", "cookieName = ?",
 				"from", "creationDate > ?",
 				"to", "creationDate < ?",
-				"customer", "name = ?",
 				"blocked", "blocked = ?"
 		);
 
@@ -134,16 +130,16 @@ public class Database {
 		}
 
 		// If we have any query conditions, we add WHERE; otherwise not.
-		if (params.size() > 0)
+		if (conditions.size() > 0)
 			query.append("WHERE ");
 
 		// Add all condition strings to the query.
 		for (var cond: conditions.keySet()) {
-			condition.add(cond);
+			conditionJoiner.add(cond);
 		}
 
 		// Add the conditions to the query string.
-		query.append(condition.toString() + ";");
+		query.append(conditionJoiner.toString() + ";");
 
 		// Create statement
 	 	PreparedStatement stmt = this.connection.prepareStatement(query.toString());
