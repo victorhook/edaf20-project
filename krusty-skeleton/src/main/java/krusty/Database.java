@@ -279,9 +279,14 @@ public class Database {
 		boolean changeOk = true;
 		for (Ingredient ingredient: ingredients) {
 			PreparedStatement stmt = this.connection.prepareStatement(query);
-			stmt.setInt(1, ingredient.amount);
+
+			int palletAmount = 54 * ingredient.amount;
+
+			stmt.setInt(1, palletAmount);
 			stmt.setString(2, ingredient.name);
 			stmt.setString(3, cookieName);
+
+			System.out.printf("%s: %s\n", ingredient.name, palletAmount);
 
 			int result = stmt.executeUpdate();
 			changeOk = result > 0;
