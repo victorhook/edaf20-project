@@ -36,7 +36,7 @@ public class Database {
 	private static final String DEFAULT_PALLET_LOCATION = "transit";
 	private static final int INVALID_COOKIE_NAME = -1, BAD_RESULT = -1, ERROR = -1, UNKNOWN_COOKIE = -2, PALLET_OK = 1;
 
-	private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd %H:%m:%s");
+	private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
 
 	private Connection connection;
 	private DefaultRecipes recipes;
