@@ -105,7 +105,6 @@ public class Database {
 		StringBuilder query = new StringBuilder(
 				"SELECT pallet_id, cookieName, creationDate, name, isBlocked\n" +
 				"FROM pallets\n" +
-				"JOIN products USING (product_id)\n" +
 				"JOIN orders USING (order_id)\n" +
 				"JOIN customers USING (customer_id)\n"
 		);
@@ -174,6 +173,11 @@ public class Database {
 				"SET FOREIGN_KEY_CHECKS = " + (on ? "1" : "0") + ";"
 		);
 	}
+	private void setSafeUpdate(boolean on) throws SQLException {
+		connection.createStatement().executeQuery(
+				"SET SQL_SAFE_UPDATES = " + (on ? "1" : "0") + ";"
+		);
+	}
 
 	public String reset(Request req, Response res) throws SQLException {
 		String[] resetTables = {"Customers", "IngredientInRecipes", "Recipes", "Storage", "Pallets"};
@@ -187,7 +191,6 @@ public class Database {
 				setForeignKeyCheck(true);
 
 
-				/*
 				if ("Customers".equals(table)){
 					initCustomers();
 				}
@@ -200,8 +203,6 @@ public class Database {
 				else if ("Storage".equals(table)){
 					initStorage();
 				}
-
-				 */
 
 			}
 		}
@@ -255,49 +256,59 @@ public class Database {
 
 	 	if (cookieName == null) {
 			resultStatus = ERROR;
-		}
-
-	 	if (resultStatus != ERROR) {
-			cookieId = getProductIdFromCookie(cookieName);
-			if (cookieId == INVALID_COOKIE_NAME) {
-				resultStatus = UNKNOWN_COOKIE;
-			}
+		} else if (!cookieExists(cookieName)) {
+			resultStatus = UNKNOWN_COOKIE;
 		}
 
 	 	// Update storage information!
 		this.connection.setAutoCommit(false);
+		setSafeUpdate(false);
 
 	 	// Check if we can create a new pallet!
 		var ingredients= getRecipe(cookieName).ingredients;
+		System.out.println(ingredients);
 		String query =  "UPDATE storage\n" +
-						"SET amount = amount - 100\n" +
-						"WHERE ingredientName IN\n" +
+						"SET amount = amount - ?\n" +
+						"WHERE ingredientName = ? AND " +
+						"ingredientName IN \n" +
 						"(\n" +
 						"SELECT ingredientName\n" +
 						"FROM ingredientinrecipes\n" +
 						"WHERE cookieName = ?\n" +
 						");";
 
-		PreparedStatement stmt= this.connection.prepareStatement(query);
-		stmt.setString(1, cookieName);
-		int rowsChanged = stmt.executeUpdate();
 
-		// If all rows changed, we know that we can create the pallet!
-		if (rowsChanged == ingredients.length) {
-			this.connection.commit();
-		} else {
-			resultStatus = ERROR;
+		boolean changeOk = true;
+		for (Ingredient ingredient: ingredients) {
+			PreparedStatement stmt = this.connection.prepareStatement(query);
+			stmt.setInt(1, ingredient.amount);
+			stmt.setString(2, ingredient.name);
+			stmt.setString(3, cookieName);
+			System.out.println(stmt);
+			int result = stmt.executeUpdate();
+			changeOk = result > 0;
+			System.out.println(result);
+			if (!changeOk)
+				break;
 		}
 
-	 	if (resultStatus != ERROR && resultStatus != UNKNOWN_COOKIE) {
+		// If there's enough ingredients in storage, commit the change!
+		if (!changeOk)
+			resultStatus = ERROR;
+		else
+			this.connection.commit();
 
-			String[] columns = new String[] {"product_id", "creationDate" , "isBlocked" , "location"};
-			stmt = makePreparedStatement("pallets", columns);
+		this.connection.setAutoCommit(true);
+
+		if (resultStatus == PALLET_OK) {
+
+			String[] columns = new String[] {"cookieName", "creationDate" , "isBlocked" , "location"};
+			PreparedStatement stmt = makePreparedStatement("pallets", columns);
 
 			if (stmt == null) {
 				resultStatus = ERROR;
 			} else {
-				stmt.setInt(1, cookieId);
+				stmt.setString(1, cookieName);
 				stmt.setDate(2, getTodaysDate());
 				stmt.setBoolean(3, false);
 				stmt.setString(4, DEFAULT_PALLET_LOCATION);
@@ -306,6 +317,9 @@ public class Database {
 				palletId = getLastPalletId();
 			}
 		}
+
+		setSafeUpdate(true);
+
 
 	 	if (resultStatus == PALLET_OK) {
 	 		// Need to update Pallet 36 x 10 x 15 =
@@ -336,6 +350,14 @@ public class Database {
 		}
 
 		return id;
+	}
+
+	/** Helper method to check if a cookie exists */
+	private boolean cookieExists(String cookieName) throws SQLException {
+		PreparedStatement stmt = connection.prepareStatement("SELECT cookieName FROM Recipes WHERE cookieName = ?;");
+		stmt.setString(1, cookieName);
+		var res = stmt.executeQuery();
+		return res.next();
 	}
 
 	/** Helper method to get todays date. */
