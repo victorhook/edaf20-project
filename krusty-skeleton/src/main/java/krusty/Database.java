@@ -416,6 +416,7 @@ public class Database {
 		return jsonResult;
 	}
 
+	/** Method to set customers in database to base values. */
 	private void initCustomers(){
 		String data = readFile("customers.sql");
 		Statement stmt = null;
@@ -428,6 +429,7 @@ public class Database {
 		}
 	}
 
+	/** Method to set ingredientsInRecipes in database to base values. */
 	private void initIngredientInRecipes(){
 		String data = readFile("ingredients.sql");
 		Statement stmt = null;
@@ -440,6 +442,7 @@ public class Database {
 		}
 	}
 
+	/** Method to set recipes in database to base values. */
 	private void initRecipes(){
 		String data = readFile("recipes.sql");
 		Statement stmt = null;
@@ -452,6 +455,7 @@ public class Database {
 		}
 	}
 
+	/** Method to set storage in database to base values. */
 	private void initStorage(){
 		String data = readFile("storage.sql");
 		Statement stmt = null;
@@ -464,6 +468,7 @@ public class Database {
 		}
 	}
 
+	/** Helper method to read a file. */
 	private String readFile(String file) {
 		try {
 			String path = "src/main/resources/" + file;
