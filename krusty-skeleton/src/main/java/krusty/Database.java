@@ -397,7 +397,7 @@ public class Database {
 	}
 
 	private void initCustomers(){
-		String data = readFile("customers.txt");
+		String data = readFile("customers.sql");
 		Statement stmt = null;
 		try {
 			stmt = this.connection.createStatement();
@@ -409,7 +409,7 @@ public class Database {
 	}
 
 	private void initIngredientInRecipes(){
-		String data = readFile("ingredients.txt");
+		String data = readFile("ingredients.sql");
 		Statement stmt = null;
 		try {
 			stmt = this.connection.createStatement();
@@ -421,7 +421,7 @@ public class Database {
 	}
 
 	private void initRecipes(){
-		String data = readFile("recipes.txt");
+		String data = readFile("recipes.sql");
 		Statement stmt = null;
 		try {
 			stmt = this.connection.createStatement();
@@ -433,7 +433,7 @@ public class Database {
 	}
 
 	private void initStorage(){
-		String data = readFile("storage.txt");
+		String data = readFile("storage.sql");
 		Statement stmt = null;
 		try {
 			stmt = this.connection.createStatement();
