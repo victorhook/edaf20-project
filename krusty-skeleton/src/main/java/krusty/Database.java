@@ -1,16 +1,11 @@
 package krusty;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.util.JSONPObject;
 import spark.Request;
 import spark.Response;
 
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-
-import java.io.File;
-import java.io.FileNotFoundException;
 
 import java.sql.*;
 import java.text.ParseException;
@@ -20,7 +15,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.Date;
 
-import static krusty.Jsonizer.toJson;
 
 public class Database {
 
