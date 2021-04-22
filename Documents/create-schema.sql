@@ -8,8 +8,8 @@ DROP TABLE IF EXISTS Orders;
 DROP TABLE IF EXISTS Customers;
 
 CREATE TABLE Recipes (
-cookieName VARCHAR(20),
-PRIMARY KEY(cookieName)
+cookie VARCHAR(20),
+PRIMARY KEY(cookie)
 );
 
 CREATE TABLE Customers (
@@ -21,12 +21,12 @@ PRIMARY KEY(customer_id)
 
 
 CREATE TABLE IngredientInRecipes (
-cookieName VARCHAR(20),
+cookie VARCHAR(20),
 ingredientName VARCHAR(30),
 quantity INT,
 unit VARCHAR(3),
-PRIMARY KEY(cookieName, ingredientName),
-FOREIGN KEY(cookieName) REFERENCES Recipes(cookieName),
+PRIMARY KEY(cookie, ingredientName),
+FOREIGN KEY(cookie) REFERENCES Recipes(cookie),
 FOREIGN KEY(ingredientName) REFERENCES Storage(ingredientName)
 );
 
@@ -48,14 +48,14 @@ FOREIGN KEY(ingredientName) REFERENCES Storage(ingredientName)
 
 CREATE TABLE Pallets (
 pallet_id INT AUTO_INCREMENT,
-cookieName VARCHAR(20),
+cookie VARCHAR(20),
 order_id INT,
 creationDate DATETIME,
 deliveredDate DATETIME,
-isBlocked BOOLEAN,
+blocked BOOLEAN,
 location VARCHAR(20),
 PRIMARY KEY(pallet_id),
-FOREIGN KEY(cookieName) REFERENCES Recipes(cookieName),
+FOREIGN KEY(cookie) REFERENCES Recipes(cookie),
 FOREIGN KEY(order_id) REFERENCES Orders(order_id)
 );
 
