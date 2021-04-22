@@ -90,7 +90,7 @@ public class Database {
 	public String getPallets(Request req, Response res) throws SQLException, ParseException {
 		// Build base query, joining all tables that we will need.
 		StringBuilder query = new StringBuilder(
-				"SELECT pallet_id, cookieName, creationDate, name, isBlocked\n" +
+				"SELECT pallet_id, cookie, production_date, name, blocked\n" +
 				"FROM pallets\n" +
 				"LEFT JOIN orders USING (order_id)\n" +
 				"LEFT JOIN customers USING (customer_id)\n"
@@ -101,9 +101,9 @@ public class Database {
 
 		Map<String, String> conditions = new HashMap<>();
 		var params = Map.of(
-				"cookie", "cookieName = ?",
-				"from", "creationDate >= ?",
-				"to", "creationDate <= ?",
+				"cookie", "cookie = ?",
+				"from", "production_date >= ?",
+				"to", "production_date <= ?",
 				"blocked", "blocked = ?"
 		);
 
@@ -133,6 +133,7 @@ public class Database {
 		// Set all the variables for the statement.
 		int index = 1;
 		for (var entry: conditions.entrySet()) {
+
 			// For every condition given, set the value for the prepared statement.
 			// Some of this is hardcoded due to specific types.
 			String queryPart = entry.getKey();
@@ -150,19 +151,12 @@ public class Database {
 			index++;
 		}
 
-		System.out.println(stmt);
-
+		// Need to translate some of the strings to match the API exactly. THere's probably better ways to do this but it works...
 		String result = Jsonizer.toJson(stmt.executeQuery(), "pallets");
 		result = result.replace("false", "\"no\"")
 			      	   .replace("true", "\"yes\"")
 			  		   .replace("null", "\"null\"")
-					   .replace("pallet_id", "id")
-					   .replace("cookieName", "cookie")
-					   .replace("isBlocked", "blocked")
-					   .replace("creationDate", "production_date");
-
-
-		System.out.println(result);
+					   .replace("pallet_id", "id");
 
 		return result;
 	}
