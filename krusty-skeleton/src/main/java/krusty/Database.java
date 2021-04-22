@@ -71,18 +71,17 @@ public class Database {
 
 	/** Returns all cookies. */
 	public String getCookies(Request req, Response res) {
-		String result = selectQuery("recipes", "cookies", "cookieName");
+		String result = selectQuery("recipes", "cookies", "cookie");
 		// Need to match API
-		result = result.replace("cookieName", "name");
+		result = result.replace("cookie", "name");
 		return result;
 	}
 
 	/** Returns all recipes. */
 	public String getRecipes(Request req, Response res) {
 		String result = selectQuery("ingredientinrecipes", "recipes",
-							"cookieName", "ingredientName", "quantity", "unit");
+							"cookie", "ingredientName", "quantity", "unit");
 		result = result.replace("ingredientName", "raw_material");
-		result = result.replace("cookieName", "cookie");
 		return result;
 	}
 
@@ -194,13 +193,13 @@ public class Database {
 
 	/** Creates a new pallet with a given cookie. */
 	public String createPallet(Request req, Response res) throws SQLException {
-		String cookieName = req.queryParams("cookie");
+		String cookie = req.queryParams("cookie");
 		int palletId = -1;
 		int resultStatus = PALLET_OK;
 
-		if (cookieName == null) {
+		if (cookie == null) {
 			resultStatus = ERROR;
-		} else if (!cookieExists(cookieName)) {
+		} else if (!cookieExists(cookie)) {
 			resultStatus = UNKNOWN_COOKIE;
 		}
 
@@ -209,7 +208,7 @@ public class Database {
 		setSafeUpdate(false);
 
 		// Check if we can create a new pallet!
-		var ingredients= getRecipe(cookieName).ingredients;
+		var ingredients= getRecipe(cookie).ingredients;
 
 		String query =  "UPDATE storage\n" +
 				"SET amount = amount - ?\n" +
@@ -218,7 +217,7 @@ public class Database {
 				"(\n" +
 				"SELECT ingredientName\n" +
 				"FROM ingredientinrecipes\n" +
-				"WHERE cookieName = ?\n" +
+				"WHERE cookie = ?\n" +
 				");";
 
 
@@ -230,7 +229,7 @@ public class Database {
 
 			stmt.setInt(1, palletAmount);
 			stmt.setString(2, ingredient.name);
-			stmt.setString(3, cookieName);
+			stmt.setString(3, cookie);
 
 			int result = stmt.executeUpdate();
 			changeOk = result > 0;
@@ -249,13 +248,13 @@ public class Database {
 
 		if (resultStatus == PALLET_OK) {
 
-			String[] columns = new String[] {"cookieName", "creationDate" , "isBlocked" , "location"};
+			String[] columns = new String[] {"cookie", "production_date" , "blocked" , "location"};
 			PreparedStatement stmt = makePreparedStatement("pallets", columns);
 
 			if (stmt == null) {
 				resultStatus = ERROR;
 			} else {
-				stmt.setString(1, cookieName);
+				stmt.setString(1, cookie);
 				stmt.setString(2, getCurrentDateTime());
 				stmt.setBoolean(3, false);
 				stmt.setString(4, DEFAULT_PALLET_LOCATION);
@@ -352,9 +351,9 @@ public class Database {
 		return DATE_TIME_FORMAT.format(LocalDateTime.now());
 	}
 	/** Returns true if a given cookie exists */
-	private boolean cookieExists(String cookieName) throws SQLException {
-		PreparedStatement stmt = connection.prepareStatement("SELECT cookieName FROM Recipes WHERE cookieName = ?;");
-		stmt.setString(1, cookieName);
+	private boolean cookieExists(String cookie) throws SQLException {
+		PreparedStatement stmt = connection.prepareStatement("SELECT cookie FROM Recipes WHERE cookie = ?;");
+		stmt.setString(1, cookie);
 		var res = stmt.executeQuery();
 		return res.next();
 	}
