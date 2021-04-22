@@ -1,3 +1,6 @@
+SET SQL_SAFE_UPDATES = 0;
+SET FOREIGN_KEY_CHECKS = 0;
+
 DROP TABLE IF EXISTS Recipes;
 DROP TABLE IF EXISTS IngredientInRecipes;
 DROP TABLE IF EXISTS Storage;
@@ -64,3 +67,6 @@ customer_id INT,
 PRIMARY KEY(order_id),
 FOREIGN KEY(customer_id) REFERENCES Customers(customer_id)
 );
+
+SET SQL_SAFE_UPDATES = 1;
+SET FOREIGN_KEY_CHECKS = 1;
