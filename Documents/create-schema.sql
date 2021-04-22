@@ -1,5 +1,4 @@
 DROP TABLE IF EXISTS Recipes;
-DROP TABLE IF EXISTS Products;
 DROP TABLE IF EXISTS IngredientInRecipes;
 DROP TABLE IF EXISTS Storage;
 DROP TABLE IF EXISTS StorageUpdates;
@@ -50,7 +49,7 @@ CREATE TABLE Pallets (
 pallet_id INT AUTO_INCREMENT,
 cookie VARCHAR(20),
 order_id INT,
-creationDate DATETIME,
+production_date DATETIME,
 deliveredDate DATETIME,
 blocked BOOLEAN,
 location VARCHAR(20),
