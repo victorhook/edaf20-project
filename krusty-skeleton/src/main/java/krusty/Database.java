@@ -28,19 +28,17 @@ public class Database {
 	private static final String dbUsername = "krustyadmin";
 	private static final String dbPassword = "krustykaka123";
 	private static final String database = "krustykookie";
-
 	private static final String hostPort = "13337";
 	private static final String hostIp = "83.250.66.137";
 
 	// Need to add timezone info for connection.
 	private static final String jdbcHost = "jdbc:mysql://" + hostIp + ":" + hostPort + "/" + database + "?serverTimezone=Europe/Stockholm";
 
+	// Constants
 	private static final String DEFAULT_PALLET_LOCATION = "transit";
-	private static final int INVALID_COOKIE_NAME = -1, BAD_RESULT = -1, ERROR = -1, UNKNOWN_COOKIE = -2, PALLET_OK = 1;
-
+	private static final int BAD_RESULT = -1, ERROR = -1, UNKNOWN_COOKIE = -2, PALLET_OK = 1;
 	private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
 	private static final DateTimeFormatter DATE_TIME_FORMAT = DateTimeFormatter.ofPattern("YYYY-MM-dd HH:mm:ss");
-
 
 	private Connection connection;
 	private DefaultRecipes recipes;
@@ -49,35 +47,20 @@ public class Database {
 		recipes = new DefaultRecipes();
 	}
 
-	public void connect() {
-		try {
-			connection = DriverManager.getConnection(jdbcHost, dbUsername, dbPassword);
-			System.out.println("Connected to database");
-		} catch (SQLException e) {
-			e.printStackTrace();
-			System.out.println("ERROR: Failed to connect to database!");
-		}
+	/** Tries to connect to the database and throws an exception of it fails. */
+	public void connect() throws SQLException {
+		connection = DriverManager.getConnection(jdbcHost, dbUsername, dbPassword);
 	}
 
+	/* --- Queries ---- */
 
-	/**
-	 * DONE:
-	 * - customers
-	 * - raw_materials
-	 * - cookies
-	 * - recipes
-	 *
-	 * NOT DONE:
-	 * - pallets (get )
-	 * - reset
-	 */
-	// TODO: Implement and change output in all methods below!
-
+	/** Returns all customers. */
 	public String getCustomers(Request req, Response res) {
 		String result = selectQuery("Customers", "customers", "name", "address");
 		return result;
 	}
 
+	/** Returns all raw-materials. */
 	public String getRawMaterials(Request req, Response res) {
 		String result = selectQuery("storage", "raw-materials", "ingredientName", "amount", "unit");
 		// Need to do some renaming to match API spec.
@@ -86,6 +69,7 @@ public class Database {
 		return result;
 	}
 
+	/** Returns all cookies. */
 	public String getCookies(Request req, Response res) {
 		String result = selectQuery("recipes", "cookies", "cookieName");
 		// Need to match API
@@ -93,6 +77,7 @@ public class Database {
 		return result;
 	}
 
+	/** Returns all recipes. */
 	public String getRecipes(Request req, Response res) {
 		String result = selectQuery("ingredientinrecipes", "recipes",
 							"cookieName", "ingredientName", "quantity", "unit");
@@ -101,6 +86,7 @@ public class Database {
 		return result;
 	}
 
+	/** Returns all pallets that match a certain criteria. */
 	public String getPallets(Request req, Response res) throws SQLException, ParseException {
 		// Build base query, joining all tables that we will need.
 		StringBuilder query = new StringBuilder(
@@ -181,17 +167,7 @@ public class Database {
 		return result;
 	}
 
-	private void setForeignKeyCheck(boolean on) throws SQLException {
-		connection.createStatement().executeQuery(
-				"SET FOREIGN_KEY_CHECKS = " + (on ? "1" : "0") + ";"
-		);
-	}
-	private void setSafeUpdate(boolean on) throws SQLException {
-		connection.createStatement().executeQuery(
-				"SET SQL_SAFE_UPDATES = " + (on ? "1" : "0") + ";"
-		);
-	}
-
+	/** Resets the database to match the default values. */
 	public String reset(Request req, Response res) throws SQLException {
 		String[] resetTables = {"Customers", "IngredientInRecipes", "Recipes", "Storage", "Pallets"};
 		for(String table : resetTables){
@@ -222,72 +198,34 @@ public class Database {
 		return "status" + ": " + "ok";
 	}
 
-	/** Helper method to convert raw string date to SQL string date object. */
-	private java.sql.Date toSqlDate(String date) throws ParseException {
-		Date parsed = DATE_FORMAT.parse(date);
-		return new java.sql.Date(parsed.getTime());
-	}
-
-	private int getLastPalletId() throws SQLException {
-		ResultSet result = this.connection.createStatement().executeQuery(
-				"SELECT pallet_id " +
-					"FROM pallets " +
-					"ORDER BY pallet_id DESC LIMIT 1;"
-
-		);
-
-		if (result.next()) {
-			return result.getInt(1);
-		} else {
-			return BAD_RESULT;
-		}
-	}
-
-	private void updateStorage(String name, int amount) throws SQLException {
-		String query = "UPDATE storage SET ? = ? WHERE ";
-		PreparedStatement stmt = this.connection.prepareStatement(query);
-		stmt.setString(1, name);
-		stmt.setInt(2, amount);
-		stmt.executeUpdate();
-	}
-
-	private Recipe getRecipe(String recipe) {
-		for (Recipe rec: recipes.recipes) {
-			if (rec.name.equals(recipe)) {
-				return rec;
-			}
-		}
-		return null;
-	}
-
-	/** POST /pallets?cookie=Amneris */
+	/** Creates a new pallet with a given cookie. */
 	public String createPallet(Request req, Response res) throws SQLException {
-	 	String cookieName = req.queryParams("cookie");
+		String cookieName = req.queryParams("cookie");
 		int palletId = -1;
 		int resultStatus = PALLET_OK;
 
-	 	if (cookieName == null) {
+		if (cookieName == null) {
 			resultStatus = ERROR;
 		} else if (!cookieExists(cookieName)) {
 			resultStatus = UNKNOWN_COOKIE;
 		}
 
-	 	// Update storage information!
+		// Update storage information!
 		this.connection.setAutoCommit(false);
 		setSafeUpdate(false);
 
-	 	// Check if we can create a new pallet!
+		// Check if we can create a new pallet!
 		var ingredients= getRecipe(cookieName).ingredients;
 
 		String query =  "UPDATE storage\n" +
-						"SET amount = amount - ?\n" +
-						"WHERE ingredientName = ? AND " +
-						"ingredientName IN \n" +
-						"(\n" +
-						"SELECT ingredientName\n" +
-						"FROM ingredientinrecipes\n" +
-						"WHERE cookieName = ?\n" +
-						");";
+				"SET amount = amount - ?\n" +
+				"WHERE ingredientName = ? AND " +
+				"ingredientName IN \n" +
+				"(\n" +
+				"SELECT ingredientName\n" +
+				"FROM ingredientinrecipes\n" +
+				"WHERE cookieName = ?\n" +
+				");";
 
 
 		boolean changeOk = true;
@@ -335,10 +273,10 @@ public class Database {
 
 		setSafeUpdate(true);
 
-	 	if (resultStatus == PALLET_OK) {
-	 		// Need to update Pallet 36 x 10 x 15 =
+		if (resultStatus == PALLET_OK) {
+			// Need to update Pallet 36 x 10 x 15 =
 
-	 		return  "{\n\t\"status\": \"ok\" " +
+			return  "{\n\t\"status\": \"ok\" " +
 					"\n\t\"id\": " + palletId + "\n}";
 		} else if (resultStatus == ERROR) {
 			return "{\n\t\"status\": \"error\"\n}";
@@ -348,11 +286,78 @@ public class Database {
 
 	}
 
+
+	/* --- HELPER METHODS --- */
+
+	private void initCustomers() throws SQLException {
+		String data = readFile("customers.sql");
+		this.connection.createStatement().execute(data);
+	}
+
+	private void initIngredientInRecipes() throws SQLException {
+		String data = readFile("ingredients.sql");
+		this.connection.createStatement().execute(data);
+	}
+
+	private void initRecipes() throws SQLException {
+		String data = readFile("recipes.sql");
+		this.connection.createStatement().execute(data);
+	}
+
+	private void initStorage() throws SQLException {
+		String data = readFile("storage.sql");
+		this.connection.createStatement().execute(data);
+	}
+
+	private void setForeignKeyCheck(boolean on) throws SQLException {
+		connection.createStatement().executeQuery(
+				"SET FOREIGN_KEY_CHECKS = " + (on ? "1" : "0") + ";"
+		);
+	}
+
+	private void setSafeUpdate(boolean on) throws SQLException {
+		connection.createStatement().executeQuery(
+				"SET SQL_SAFE_UPDATES = " + (on ? "1" : "0") + ";"
+		);
+	}
+
+	/** Convert raw string date to SQL string date object. */
+	private java.sql.Date toSqlDate(String date) throws ParseException {
+		Date parsed = DATE_FORMAT.parse(date);
+		return new java.sql.Date(parsed.getTime());
+	}
+
+	/** Returns the id of the last-produced pallet. */
+	private int getLastPalletId() throws SQLException {
+		ResultSet result = this.connection.createStatement().executeQuery(
+				"SELECT pallet_id " +
+					"FROM pallets " +
+					"ORDER BY pallet_id DESC LIMIT 1;"
+
+		);
+
+		if (result.next()) {
+			return result.getInt(1);
+		} else {
+			return BAD_RESULT;
+		}
+	}
+
+	/** Returns a recipe object from a recipe string. */
+	private Recipe getRecipe(String recipe) {
+		for (Recipe rec: recipes.recipes) {
+			if (rec.name.equals(recipe)) {
+				return rec;
+			}
+		}
+		return null;
+	}
+
+	/** Returns the current time as a string, formatted to sql-friendly format. */
 	private String getCurrentDateTime() {
 		return DATE_TIME_FORMAT.format(LocalDateTime.now());
 	}
-
-	/** Helper method to check if a cookie exists */
+	/** Returns true if a given cookie exists */
 	private boolean cookieExists(String cookieName) throws SQLException {
 		PreparedStatement stmt = connection.prepareStatement("SELECT cookieName FROM Recipes WHERE cookieName = ?;");
 		stmt.setString(1, cookieName);
@@ -360,12 +365,7 @@ public class Database {
 		return res.next();
 	}
 
-	/** Helper method to get todays date. */
-	private java.sql.Date getTodaysDate() {
-		return new java.sql.Date(System.currentTimeMillis());
-	}
-
-	/** Helper method to perform an insert query. */
+	/** Creates a base PreparedStatement for insertions, given the table and the columns to insert into */
 	private PreparedStatement makePreparedStatement(String table, String[] columns) {
 		PreparedStatement stmt = null;
 		try {
@@ -394,7 +394,7 @@ public class Database {
 		return stmt;
 	}
 
-	/** Helper method to perform a select query. */
+	/** Create a base select-query. */
 	private String selectQuery(String table, String jsonName, String... columns) {
 		// Default value is an empty object, in case an error occurs when querying!
 		String jsonResult = "{}";
@@ -418,26 +418,7 @@ public class Database {
 		return jsonResult;
 	}
 
-	private void initCustomers() throws SQLException {
-		String data = readFile("customers.sql");
-		this.connection.createStatement().execute(data);
-	}
-
-	private void initIngredientInRecipes() throws SQLException {
-		String data = readFile("ingredients.sql");
-		this.connection.createStatement().execute(data);
-	}
-
-	private void initRecipes() throws SQLException {
-		String data = readFile("recipes.sql");
-		this.connection.createStatement().execute(data);
-	}
-
-	private void initStorage() throws SQLException {
-		String data = readFile("storage.sql");
-		this.connection.createStatement().execute(data);
-	}
-
+	/** Reads a given file from disk and returns the content of the file as a string. */
 	private String readFile(String file) {
 		try {
 			String path = "src/main/resources/" + file;
