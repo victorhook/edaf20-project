@@ -71,9 +71,10 @@ public class Database {
 
 	/** Returns all cookies. */
 	public String getCookies(Request req, Response res) {
-		String result = selectQuery("recipes", "cookies", "cookie");
+		String result = selectQuery("recipes", "REPLACE_ME", "cookie");
 		// Need to match API
 		result = result.replace("cookie", "name");
+		result = result.replace("REPLACE_ME", "cookies");
 		return result;
 	}
 
@@ -163,14 +164,14 @@ public class Database {
 	/** Resets the database to match the default values. */
 	public String reset(Request req, Response res) throws SQLException {
 		String[] resetTables = {"Customers", "IngredientInRecipes", "Recipes", "Storage", "Pallets"};
+		setForeignKeyCheck(false);
+
 		for(String table : resetTables){
 			try (Statement stmt = connection.createStatement()){
 
 				// Truncate the table
-				setForeignKeyCheck(false);
 				String sql = "TRUNCATE TABLE " + table;
 				int result = stmt.executeUpdate(sql, Statement.RETURN_GENERATED_KEYS);
-				setForeignKeyCheck(true);
 
 
 				if ("Customers".equals(table)){
@@ -185,10 +186,11 @@ public class Database {
 				else if ("Storage".equals(table)){
 					initStorage();
 				}
-
 			}
 		}
-		return "status" + ": " + "ok";
+
+		setForeignKeyCheck(true);
+		return "{\n\t\"status\": \"ok\"\n}";
 	}
 
 	/** Creates a new pallet with a given cookie. */
