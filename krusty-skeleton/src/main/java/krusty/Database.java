@@ -18,7 +18,8 @@ import java.util.Date;
 
 public class Database {
 
-	// MySQL db credentials
+	// MySQL db credentials.
+	// Note: We didn't use the schools VPN, so ensure the port is changed from 3306 to 13337.
 	private static final String dbUsername = "krustyadmin";
 	private static final String dbPassword = "krustykaka123";
 	private static final String database = "krustykookie";
