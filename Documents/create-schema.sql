@@ -7,8 +7,8 @@ DROP TABLE IF EXISTS Orders;
 DROP TABLE IF EXISTS Customers;
 
 CREATE TABLE Recipes (
-cookie VARCHAR(20),
-PRIMARY KEY(cookie)
+name VARCHAR(20),
+PRIMARY KEY(name)
 );
 
 CREATE TABLE Customers (
@@ -25,7 +25,7 @@ ingredientName VARCHAR(30),
 quantity INT,
 unit VARCHAR(3),
 PRIMARY KEY(cookie, ingredientName),
-FOREIGN KEY(cookie) REFERENCES Recipes(cookie),
+FOREIGN KEY(cookie) REFERENCES Recipes(name),
 FOREIGN KEY(ingredientName) REFERENCES Storage(ingredientName)
 );
 
@@ -54,7 +54,7 @@ deliveredDate DATETIME,
 blocked BOOLEAN,
 location VARCHAR(20),
 PRIMARY KEY(pallet_id),
-FOREIGN KEY(cookie) REFERENCES Recipes(cookie),
+FOREIGN KEY(cookie) REFERENCES Recipes(name),
 FOREIGN KEY(order_id) REFERENCES Orders(order_id)
 );
 
