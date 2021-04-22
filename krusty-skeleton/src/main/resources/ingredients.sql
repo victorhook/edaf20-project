@@ -1,4 +1,4 @@
-INSERT INTO IngredientInRecipes(cookieName, ingredientName, Quantity, unit) VALUES
+INSERT INTO IngredientInRecipes(cookie, ingredientName, Quantity, unit) VALUES
 ('Nut ring', 'Flour', '450', 'g'),
 ('Nut ring', 'Butter', '450', 'g'),
 ('Nut ring', 'Icing sugar', '190', 'g'),
