@@ -108,12 +108,7 @@ public class Database {
 		for (var entry: params.entrySet()) {
 			String param = req.queryParams(entry.getKey());
 			if (param != null) {
-				String key = entry.getValue();
-
-				// Need to convert boolean value to true/false to make sql happy.
-				if (key.equals("blocked"))
-					param = param.equals("yes") ? "true" : "false";
-				conditions.put(key, param);
+				conditions.put(entry.getValue(), param);
 			}
 		}
 
@@ -146,6 +141,8 @@ public class Database {
 			} else if (queryPart.contains("Date")) {
 				stmt.setDate(index, toSqlDate(value));
 			} else if (queryPart.contains("blocked")) {
+				// This one needs special care to make sql happy..!
+				value = value.equals("yes") ? "true" :" no";
 				stmt.setBoolean(index, Boolean.parseBoolean(value));
 			} else {
 				stmt.setString(index, value);
