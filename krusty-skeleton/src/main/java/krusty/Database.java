@@ -71,17 +71,14 @@ public class Database {
 
 	/** Returns all cookies. */
 	public String getCookies(Request req, Response res) {
-		String result = selectQuery("recipes", "REPLACE_ME", "cookie");
-		// Need to match API
-		result = result.replace("cookie", "name");
-		result = result.replace("REPLACE_ME", "cookies");
+		String result = selectQuery("recipes", "cookies", "name");
 		return result;
 	}
 
 	/** Returns all recipes. */
 	public String getRecipes(Request req, Response res) {
 		String result = selectQuery("ingredientinrecipes", "recipes",
-							"cookie", "ingredientName", "quantity", "unit");
+							     "cookie", "ingredientName", "quantity", "unit");
 		result = result.replace("ingredientName", "raw_material");
 		return result;
 	}
@@ -271,7 +268,7 @@ public class Database {
 		if (resultStatus == PALLET_OK) {
 			// Need to update Pallet 36 x 10 x 15 =
 
-			return  "{\n\t\"status\": \"ok\" " +
+			return  "{\n\t\"status\": \"ok\" ," +
 					"\n\t\"id\": " + palletId + "\n}";
 		} else if (resultStatus == ERROR) {
 			return "{\n\t\"status\": \"error\"\n}";
@@ -352,9 +349,10 @@ public class Database {
 	private String getCurrentDateTime() {
 		return DATE_TIME_FORMAT.format(LocalDateTime.now());
 	}
+
 	/** Returns true if a given cookie exists */
 	private boolean cookieExists(String cookie) throws SQLException {
-		PreparedStatement stmt = connection.prepareStatement("SELECT cookie FROM Recipes WHERE cookie = ?;");
+		PreparedStatement stmt = connection.prepareStatement("SELECT name FROM Recipes WHERE name = ?;");
 		stmt.setString(1, cookie);
 		var res = stmt.executeQuery();
 		return res.next();
