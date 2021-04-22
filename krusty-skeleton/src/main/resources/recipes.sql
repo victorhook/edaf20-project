@@ -1,4 +1,4 @@
-INSERT INTO Recipes(cookieName) VALUES
+INSERT INTO Recipes(cookie) VALUES
 ('Nut ring'),
 ('Nut cookie'),
 ('Amneris'),
