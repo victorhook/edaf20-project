@@ -3,6 +3,7 @@ package krusty;
 import java.io.IOError;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.sql.SQLException;
 
 import static spark.Spark.*;
 
@@ -16,12 +17,18 @@ public class ServerMain {
 		staticFiles.location("/public");
 
 		db = new Database();
-		db.connect();
+		try {
+			db.connect();
+		} catch (SQLException e) {
+			// If we fail to connect to db, we exit early, no reason to keep running.
+			e.printStackTrace();
+			System.out.println("ERROR: Failed to connect to database!");
+			return;
+		}
 
 		port(PORT);
 		
 		enableCORS();
-
 		initIndex();
 		initRoutes();
 	}

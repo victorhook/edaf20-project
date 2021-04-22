@@ -5,6 +5,10 @@ import java.util.List;
 
 public class DefaultRecipes {
 
+    /**
+     * This class consists of all the default recipes for the cookies.
+     */
+
     public List<Recipe> recipes;
 
     public DefaultRecipes() {
