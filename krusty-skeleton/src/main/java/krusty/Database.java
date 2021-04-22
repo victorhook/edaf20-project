@@ -108,7 +108,12 @@ public class Database {
 		for (var entry: params.entrySet()) {
 			String param = req.queryParams(entry.getKey());
 			if (param != null) {
-				conditions.put(entry.getValue(), param);
+				String key = entry.getValue();
+
+				// Need to convert boolean value to true/false to make sql happy.
+				if (key.equals("blocked"))
+					param = param.equals("yes") ? "true" : "false";
+				conditions.put(key, param);
 			}
 		}
 
