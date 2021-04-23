@@ -1,11 +1,8 @@
-# Krusty Kookies
+# Krusty Kookies - REST API for cookie creation.
 
-## Todos:
-- [X] Alla relationer enligt *"Your relations, with primary keys and foreign keys marked correctly, and proper naming."*
-- [X] Initeringsscript `create-schema.sql` för att skapa tabeller
-- [X] Initeringsscript `initial-data.sql` för att sätta in data
-- [ ] REST API
-- [ ] Beskrivning för att köra servern.
+This project was a part of the course Database Technology, *EDAF20* at Lunds University, 2021.
+The aim was to develop a REST API for a cookie company using Java and MySql.
+The project was finished on 2021-04-23.
 
 
 ## E/R Model
