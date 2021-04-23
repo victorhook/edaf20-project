@@ -27,7 +27,7 @@ public class Database {
 	private static final String hostIp = "83.250.66.137";
 
 	// Need to add timezone info for connection.
-	private static final String jdbcHost = "jdbc:mysql://" + hostIp + ":" + hostPort + "/" + database + "?serverTimezone=Europe/Stockholm";
+	private static final String jdbcString = "jdbc:mysql://" + hostIp + ":" + hostPort + "/" + database + "?serverTimezone=Europe/Stockholm";
 
 	// Constants
 	private static final String DEFAULT_PALLET_LOCATION = "transit";
@@ -44,7 +44,7 @@ public class Database {
 
 	/** Tries to connect to the database and throws an exception of it fails. */
 	public void connect() throws SQLException {
-		connection = DriverManager.getConnection(jdbcHost, dbUsername, dbPassword);
+		connection = DriverManager.getConnection(jdbcString, dbUsername, dbPassword);
 	}
 
 	/* --- Queries ---- */
